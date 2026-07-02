@@ -25,5 +25,11 @@ public class Card : MonoBehaviour
         imgCard.gameObject.SetActive(false); // Hide the card's image
         //gameObject.SetActive(false);
     }
-        
+
+    public void Reset()
+    {
+        isFlipped = isMatched = false;
+        this.gameObject.SetActive(false);
+    }
+
 }

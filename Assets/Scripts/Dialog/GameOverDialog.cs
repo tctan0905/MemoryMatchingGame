@@ -14,6 +14,11 @@ public class GameOverDialog : MonoBehaviour
         btnHome?.onClick.AddListener(PressHome);
     }
 
+    public void Init()
+    {
+        
+    }
+
     void PressRestart()
     {
         Debug.Log("Restart button pressed.");
@@ -23,6 +28,6 @@ public class GameOverDialog : MonoBehaviour
     void PressHome()
     {
         Debug.Log("Home button pressed.");
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MenuScene");
+        SceneManager.LoadScene("MenuScene");
     }
 }

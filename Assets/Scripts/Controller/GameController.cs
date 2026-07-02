@@ -21,7 +21,7 @@ public class GameController : MonoBehaviour
     [SerializeField] private RectTransform canvasUI; // Reference to the parent transform for the cards
     [SerializeField] private List<Card> listCard; // Reference to the parent transform for the cards
     [SerializeField] private GameState gameState; // Current state of the game
-    [SerializeField] private GameObject gameOverPanel; // Reference to the game over panel
+    [SerializeField] private Text txt_level;
     private Card cardFist;
     private Card cardSecond;
     int totalPairs; // Total number of pairs in the game
@@ -33,10 +33,11 @@ public class GameController : MonoBehaviour
     [SerializeField] Image timerImage; // Reference to the UI Image component for the timer
     [SerializeField] Text txtTime, txtTimePreview; // Reference to the UI Text component for displaying time
     private float remainingTime;
-    private float remainingTimePreview = 5f; // Duration of the preview phase in seconds
+    private float remainingTimePreview = 3f; // Duration of the preview phase in seconds
     bool isGameStarted = false; // Flag to indicate if the game has started
     bool isGameOver = false; // Flag to indicate if the game is over
 
+    int nextLevel = 0;
     void Awake()
     {
 
@@ -44,8 +45,12 @@ public class GameController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        LoadLevel();
         LoadData();
+        GameEvents.OnNextLevel -= NextLevel;
+        GameEvents.OnNextLevel += NextLevel;
+
+        // GameEvents.OnRestart -= Rese;
+        // GameEvents.OnNextLevel += NextLevel;
     }
 
     // Update is called once per frame
@@ -63,6 +68,7 @@ public class GameController : MonoBehaviour
                 txtTimePreview.gameObject.SetActive(false);
                 StartGame();
             }
+            timerImage.fillAmount = 1f;
         }
         else if (gameState == GameState.PLAYING && isGameStarted && !isGameOver)
         {
@@ -82,8 +88,11 @@ public class GameController : MonoBehaviour
 
     void LoadData()
     {
+        Time.timeScale = 1f;
+        LoadLevel();
         remainingTime = levelData.TimeLimit;
         gameState = GameState.PREVIEW;
+        remainingTimePreview = 3f;
         var gridCard = cardGrid.GetComponent<GridLayoutGroup>();
         if (gridCard != null)
         {
@@ -155,19 +164,20 @@ public class GameController : MonoBehaviour
         if(LevelManager.instance == null)
             return; 
         var levelManager = LevelManager.instance;
-        levelData = levelManager.GetCurrentLevel();   
+        levelData = levelManager.GetCurrentLevel();
+        txt_level.text = "Level\n" + (levelData.Level);
     }
 
     void CreateCards()
     {
         // Load game data from a file or PlayerPrefs
         totalPairs = (levelData.Column * levelData.Row) / 2;
-        for (int i = 0; i < levelData.Column; i++)
+        for (int i = 0; i < levelData.Row; i++)
         {
-            for (int j = 0; j < levelData.Row; j++)
+            for (int j = 0; j < levelData.Column; j++)
             {
-                int index = i * levelData.Column + j;
-                GameObject cardObject = Instantiate(cardPrefab, cardGrid);
+                int index = (i * levelData.Column) + j;
+                GameObject cardObject = PoolingCard();
                 cardObject.name = "Card_" + (index);
                 Card card = cardObject.GetComponent<Card>();
                 if (card != null)
@@ -183,7 +193,7 @@ public class GameController : MonoBehaviour
                         card.HideCard(); // Hide the card's image initially
                     }
                     card.gameObject.GetComponent<Button>()?.onClick.AddListener(() => OnCardClicked(card));
-                    listCard.Add(card);
+                    // listCard.Add(card);
                 }
             }
         }
@@ -191,6 +201,9 @@ public class GameController : MonoBehaviour
 
     void UpdateTimer()
     {
+        if (gameState != GameState.PLAYING)
+            return;
+        
         float fillAmount = remainingTime / levelData.TimeLimit;
         timerImage.fillAmount = fillAmount;
         timerImage.gameObject.SetActive(remainingTime > 0); // Hide the timer when time is up
@@ -200,26 +213,23 @@ public class GameController : MonoBehaviour
 
     void Gameover()
     {
-        // Handle game over logic here
         Debug.Log("Game Over!");
         isGameOver = true;
         gameState = GameState.GAME_OVER;
-        var dialogGameOver = Instantiate(gameOverPanel, canvasUI);
-        if (dialogGameOver != null)
-        {
-            
-        }
+        Lose();
     }
 
     void RestetData()
     {
         // Reset game data to initial state
-        // remainingTime = gameDuration;
         isGameStarted = false;
         isGameOver = false;
-        cardFist = null;
-        cardSecond = null;
-        matchedPairs = 0;
+        cardFist = cardSecond = null;
+        matchedPairs = totalPairs = 0;
+        foreach (var item in listCard)
+            item.Reset();
+
+        cards.Clear();
         // UpdateTimer();
     }
 
@@ -227,7 +237,7 @@ public class GameController : MonoBehaviour
     {
         if (isGameOver || clickedCard.isFlipped || clickedCard.isMatched || gameState != GameState.PLAYING)
         {
-            return; // Ignore clicks if the game is over or the card is already flipped or matched
+            return;
         }
 
         if (cardFist == null)
@@ -274,12 +284,38 @@ public class GameController : MonoBehaviour
 
     public void Win()
     {
-        Debug.Log("Win Game at Level: ");
+        Debug.Log("Win Game at Level: " + levelData.Level);
+        
+        PauseGame();
+
+        var dialog = LoadDialog(Constant.DIALOG_WIN);
+        if(dialog == null) return;
+
+        GameObject dialog_win = Instantiate(dialog, canvasUI);
+        var dialogScript = dialog_win.GetComponent<WinDialog>();
+        if (dialogScript != null)
+        {
+            dialogScript.Init(nextLevel);
+            nextLevel++;
+        }
+        if (DataManager.instance == null)
+            return;
+        
+        var dataManger = DataManager.instance;
+        dataManger.CurrentLevel = nextLevel;
     }   
 
     public void Lose()
     {
-        Debug.Log("Lose Game at Level: " );
+        var dialog = LoadDialog(Constant.DIALOG_GAME_OVER);
+        if(dialog == null) return;
+
+        var dialogScript = dialog.GetComponent<GameOverDialog>();
+        if (dialogScript != null)
+        {
+            dialogScript.Init();
+        }
+        Debug.Log("Lose Game at Level: " + levelData.Level);
     } 
 
     public void NextLevel()
@@ -290,23 +326,70 @@ public class GameController : MonoBehaviour
         // dataManager.CurrentLevel++;
         // dataManager.SaveData();
 
-        var levelManager = LevelManager.instance;
-        LevelData levelData = levelManager.GetCurrentLevel();
-        if(levelData == null) return;
+        // var levelManager = LevelManager.instance;
+        // LevelData levelData = levelManager.GetCurrentLevel();
+        // if(levelData == null) return;
         
-        levelData.Row = (byte)levelData.Row;
-        levelData.Column = (byte)levelData.Column;
-        remainingTime = levelData.TimeLimit;
+        // levelData.Row = (byte)levelData.Row;
+        // levelData.Column = (byte)levelData.Column;
+        // remainingTime = levelData.TimeLimit;
+        RestetData();
         LoadData();
     }
 
-    public void PasueGame()
+    public void PauseGame()
     {
-        Time.timeScale = 0f;
+        var dialog = LoadDialog(Constant.DIALOG_PAUSE_GAME);
+        if(dialog == null) return;
+
+        GameObject dialog_pause_game = Instantiate(dialog, canvasUI);
+        var dialogScript = dialog_pause_game.GetComponent<PauseGameDialog>();
+        if (dialogScript != null)
+        {
+            dialogScript.Init();
+        }
     }
 
-    public void ResumeGame()
+   
+    GameObject LoadDialog(string dialogName)
     {
-        Time.timeScale = 1f;
+        var dialog = Resources.Load<GameObject>("Prefabs/" + dialogName);
+        if (dialog == null)
+        {
+            Debug.Log("Reload fail dialog: " + dialogName);
+            return null;
+        }
+        Debug.Log("Load success: " + dialogName);
+        return dialog;
+    }
+
+    void OnDestroy()
+    {
+        GameEvents.OnNextLevel -= NextLevel;
+    }
+
+    GameObject PoolingCard()
+    {
+        if (listCard.Count > 0)
+        {
+            foreach (var item in listCard)
+            {
+                if (!item.gameObject.activeSelf)
+                {
+                    item.gameObject.SetActive(true);
+                    item.isMatched = item.isFlipped = false;
+                    item.gameObject.GetComponent<Button>()?.onClick.RemoveListener(() => OnCardClicked(item));
+                    return item.gameObject;
+                }
+            }
+        }
+        
+        GameObject cardObject = Instantiate(cardPrefab, cardGrid);
+        var cardScript = cardObject.GetComponent<Card>();
+        if (cardScript != null)
+        {
+            listCard.Add(cardScript);
+        }
+        return cardObject;
     }
 }
