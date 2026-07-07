@@ -23,6 +23,7 @@ public class WinDialog : MonoBehaviour
             return;
         var dataManager = DataManager.instance;
         var levelManager = LevelManager.instance;
+        btnNextLevel.gameObject.SetActive(levelManager.GetLevelByIndex(nextLevel) != null);
     }
 
     void PressHome()
@@ -34,11 +35,16 @@ public class WinDialog : MonoBehaviour
     void PressRestart()
     {
         this.gameObject.SetActive(false);
+        GameEvents.OnNextLevel?.Invoke();
     }
 
     void PressNextLevel()
     {
         this.gameObject.SetActive(false);
+        if (LevelManager.instance == null)
+            return;
+        var levelManager = LevelManager.instance;
+        levelManager.GetLevelByIndex(this.nextLevel);
         GameEvents.OnNextLevel?.Invoke();
     }
 }

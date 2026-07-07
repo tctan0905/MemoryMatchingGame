@@ -4,7 +4,11 @@ using UnityEngine;
 public class LevelManager : MonoBehaviour
 {
     public static LevelManager instance;
-    [SerializeField] private LevelScriptable levelScriptable;
+    [SerializeField] public LevelScriptable levelScriptable;
+    private int currentLevelIndex = 0;
+    public int CurrentLevelIndex {get => currentLevelIndex; set => currentLevelIndex = value;}
+    private LevelData currentLevelData;
+    public LevelData CurrentLevelData => currentLevelData;
     public void Awake()
     {
         if (instance != null && instance != this)
@@ -26,4 +30,15 @@ public class LevelManager : MonoBehaviour
             return levelScriptable.levelDatas[currentLevel];
     }
 
+    public LevelData GetLevelByIndex(int index)
+    {
+        if (index < 0 || index >= levelScriptable.levelDatas.Count)
+        {
+            Debug.LogError("Invalid level index: " + index);
+            return null;
+        }
+        currentLevelData = levelScriptable.levelDatas[index];
+        currentLevelIndex = index;
+        return currentLevelData;
+    }
 }

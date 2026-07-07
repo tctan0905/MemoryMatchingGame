@@ -164,8 +164,9 @@ public class GameController : MonoBehaviour
         if(LevelManager.instance == null)
             return; 
         var levelManager = LevelManager.instance;
-        levelData = levelManager.GetCurrentLevel();
+        levelData = levelManager.CurrentLevelData;
         txt_level.text = "Level\n" + (levelData.Level);
+        nextLevel = levelData.Level;
     }
 
     void CreateCards()
@@ -286,7 +287,7 @@ public class GameController : MonoBehaviour
     {
         Debug.Log("Win Game at Level: " + levelData.Level);
         
-        PauseGame();
+        Time.timeScale = 0f; // Pause the game when the player wins
 
         var dialog = LoadDialog(Constant.DIALOG_WIN);
         if(dialog == null) return;
@@ -295,14 +296,19 @@ public class GameController : MonoBehaviour
         var dialogScript = dialog_win.GetComponent<WinDialog>();
         if (dialogScript != null)
         {
+            // nextLevel++;
             dialogScript.Init(nextLevel);
-            nextLevel++;
         }
         if (DataManager.instance == null)
             return;
         
         var dataManger = DataManager.instance;
-        dataManger.CurrentLevel = nextLevel;
+
+        if (dataManger.CurrentLevel < nextLevel)
+        {
+            dataManger.CurrentLevel = nextLevel;
+            dataManger.SaveData();
+        }
     }   
 
     public void Lose()
@@ -322,23 +328,14 @@ public class GameController : MonoBehaviour
     {
         if(DataManager.instance == null && LevelManager.instance == null)
             return;
-        // var dataManager = DataManager.instance;
-        // dataManager.CurrentLevel++;
-        // dataManager.SaveData();
-
-        // var levelManager = LevelManager.instance;
-        // LevelData levelData = levelManager.GetCurrentLevel();
-        // if(levelData == null) return;
-        
-        // levelData.Row = (byte)levelData.Row;
-        // levelData.Column = (byte)levelData.Column;
-        // remainingTime = levelData.TimeLimit;
         RestetData();
         LoadData();
     }
 
     public void PauseGame()
     {
+        if (gameState != GameState.PLAYING)
+            return;
         var dialog = LoadDialog(Constant.DIALOG_PAUSE_GAME);
         if(dialog == null) return;
 
@@ -353,7 +350,7 @@ public class GameController : MonoBehaviour
    
     GameObject LoadDialog(string dialogName)
     {
-        var dialog = Resources.Load<GameObject>("Prefabs/" + dialogName);
+        var dialog = Resources.Load<GameObject>("Prefabs/Dialog/" + dialogName);
         if (dialog == null)
         {
             Debug.Log("Reload fail dialog: " + dialogName);

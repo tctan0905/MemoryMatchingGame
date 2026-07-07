@@ -1358,7 +1358,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1516185424}
         m_TargetAssemblyTypeName: GameController, Assembly-CSharp
-        m_MethodName: PasueGame
+        m_MethodName: PauseGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

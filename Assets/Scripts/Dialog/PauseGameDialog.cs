@@ -2,13 +2,13 @@ using UnityEngine;
 using UnityEngine.UI;
 public class PauseGameDialog : MonoBehaviour
 {
-    [SerializeField] private Button btnResume;
-    [SerializeField] private Button btnHome;
+    [SerializeField] private Button btnResume,btnHome,btnRetry;
 
     void Start()
     {
         btnResume.onClick.AddListener(PressResume);
         btnHome.onClick.AddListener(PressHome);
+        btnRetry.onClick.AddListener(Pressretry);
     }
     public void Init()
     {
@@ -25,7 +25,13 @@ public class PauseGameDialog : MonoBehaviour
     void PressHome()
     {
         Time.timeScale = 1f; // Resume the game before quitting
-        // Implement quit logic here, e.g., load main menu scene
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MenuScene");
+    }
+
+    void Pressretry()
+    {
+        Time.timeScale = 1f; // Resume the game before retrying
+        GameEvents.OnNextLevel?.Invoke();
+        Destroy(gameObject); // Close the dialog
     }
 }

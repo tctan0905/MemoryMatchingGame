@@ -16,7 +16,7 @@ MonoBehaviour:
   - Level: 1
     Row: 2
     Column: 2
-    TimeLimit: 30
+    TimeLimit: 15
   - Level: 2
     Row: 2
     Column: 4
@@ -29,3 +29,7 @@ MonoBehaviour:
     Row: 4
     Column: 4
     TimeLimit: 70
+  - Level: 5
+    Row: 5
+    Column: 4
+    TimeLimit: 100

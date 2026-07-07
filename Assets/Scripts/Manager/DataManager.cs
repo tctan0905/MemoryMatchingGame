@@ -18,23 +18,35 @@ public class DataManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    void Start()
+    {
+        //RemoveAllData();
+        LoadData();
+    }
+
     public void SaveData()
     {
-        //PlayerPrefs.SetInt("LevelKey", currentLevel);
-        //PlayerPrefs.Save();
+        PlayerPrefs.SetInt("LevelKey", currentLevel);
+        PlayerPrefs.Save();
     }
 
     public void LoadData()
     {
-        // if (PlayerPrefs.HasKey("LevelKey"))
-        // {
-        //     currentLevel = PlayerPrefs.GetInt("LevelKey", 0);
+        if (PlayerPrefs.HasKey("LevelKey"))
+        {
+            currentLevel = PlayerPrefs.GetInt("LevelKey", 0);
 
-        //     Debug.Log($"Load Success {currentLevel} ");
-        // }
-        // else
-        // {
-        //     Debug.Log("Không tìm thấy file lưu. Đây là lần đầu tiên chơi game!");
-        // }
+            Debug.Log($"Load Success {currentLevel} ");
+        }
+        else
+        {
+            Debug.Log("Không tìm thấy file lưu. Đây là lần đầu tiên chơi game!");
+        }
+    }
+
+    public void RemoveAllData()
+    {
+        // PlayerPrefs.DeleteAll();
+        // Debug.Log("All data removed.");
     }
 }
