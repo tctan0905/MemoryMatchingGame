@@ -15,6 +15,24 @@ public class MenuController : MonoBehaviour
     {
         // Load the settings scene
         Debug.Log("Pressed Setting Game");
+        var settingDialogPrefab = Resources.Load<GameObject>("Prefabs/Dialog/" + Constant.DIALOG_SETTING);
+        if (settingDialogPrefab != null)
+        {
+            var dialogSetting = Instantiate(settingDialogPrefab, canvasUI);
+            var settingScript = dialogSetting.GetComponent<SettingDialog>();
+            if (settingScript != null)
+            {
+                settingScript.Init();
+            }
+            else
+            {
+                Debug.LogError("SettingDialog script not found on the prefab.");
+            }
+        }
+        else
+        {
+            Debug.LogError("SettingDialog prefab not found in Resources/Prefabs/Dialog.");
+        }
     }
 
     public void QuitGame()

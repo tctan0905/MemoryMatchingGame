@@ -6,6 +6,11 @@ public class DataManager : MonoBehaviour
     
     private int currentLevel;
     public int CurrentLevel {get => currentLevel; set => currentLevel = value;}
+    private float soundVolume = 1.0f;
+    public float SoundVolume { get => soundVolume; set => soundVolume = value; }
+    private float musicVolume = 1.0f;
+    public float MusicVolume { get => musicVolume; set => musicVolume = value; }
+
     void Awake()
     {
         // Ensure that the GameManager persists across scene loads
@@ -27,6 +32,9 @@ public class DataManager : MonoBehaviour
     public void SaveData()
     {
         PlayerPrefs.SetInt("LevelKey", currentLevel);
+        
+        PlayerPrefs.SetFloat("SoundVolumeKey", soundVolume);
+        PlayerPrefs.SetFloat("MusicVolumeKey", musicVolume);
         PlayerPrefs.Save();
     }
 
@@ -41,6 +49,16 @@ public class DataManager : MonoBehaviour
         else
         {
             Debug.Log("Không tìm thấy file lưu. Đây là lần đầu tiên chơi game!");
+        }
+
+        if (PlayerPrefs.HasKey("SoundVolumeKey"))
+        {
+            soundVolume = PlayerPrefs.GetFloat("SoundVolumeKey", 1.0f);
+        }
+
+        if (PlayerPrefs.HasKey("MusicVolumeKey"))
+        {
+            musicVolume = PlayerPrefs.GetFloat("MusicVolumeKey", 1.0f);
         }
     }
 
